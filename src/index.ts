@@ -155,18 +155,19 @@ document.body.appendChild(app.view as HTMLCanvasElement);
 const engine = Engine.create();
 engine.timing.timeScale = 0.8;
 
-const background = new PIXI.Sprite(PIXI.Texture.from("1.png"));
+const background = new PIXI.Sprite(PIXI.Texture.from("v1.png"));
+background.anchor.y = 0.69;
 app.stage.addChild(background);
 
-const player = createBox(0, 0, 10, 10, "logo.png", {density: 1, friction: 1, restitution: 0.8});
+const player = createBox(0, 0, 10, 10, "logo.png", {density: 1, friction: 1, restitution: 0.2});
 
-createBox(0, 10, 100, 10, "gray.png", { isStatic: true });
+// createBox(0, 10, 100, 10, "gray.png", { isStatic: true });
 
 let time: number;
 function loop(t) {
     const dt = Math.min(t-time, 100);
     time = t;
-    console.log(dt);
+    // console.log(dt);
     requestAnimationFrame(loop)
     Engine.update(engine, dt || 16);
 }
