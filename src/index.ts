@@ -83,7 +83,7 @@ window.addEventListener("pointerdown", (e) => {
         let mag = Math.min(Vector.magnitudeSquared(Vector.sub(wpos, player.position)) / maxDrag, 1);
         compression = mag;
         spring_force = Vector.mult(move, mag * maxF);
-        spring_force.x *= -1;
+        spring_force.x *= -0.5;
         spring_force.y *= -1;
 
         if (mode === 1) {
@@ -157,10 +157,10 @@ document.body.appendChild(app.view as HTMLCanvasElement);
 
 const engine = Engine.create();
 engine.timing.timeScale = 1;
-
+\
 const map: Body[] = [];
 
-const player = createBox(0, 0, 10, 10, "logo.png", {density: 1, restitution: 0.8}, false);
+const player = createBox(0, 0, 10, 10, "logo.png", {density: 1, restitution: 0.2, frictionStatic: 5}, false);
 
 
 createBox(0, 10, 100, 10, "gray.png", { isStatic: true });
@@ -195,13 +195,13 @@ let text = new PIXI.Text("Elevation: 0", {
     strokeThickness: 5,
     lineJoin: "round",
 });
-text.position.x = 10;
+text.position.x = window.innerWidth -220;
 text.position.y = 10;
 
 app.stage.addChild(text);
 
 const serializer = Serializer.create();
-(document.querySelector("#export") as HTMLButtonElement).addEventListener("click", ()=>{
+(document.querySelector("#export") as HTElevationMLButtonElement).addEventListener("click", ()=>{
     const link = document.createElement("a");
     link.href = `data:text/,${Serializer.serialise(serializer, engine.world)}`;
     link.download = "map.json";
