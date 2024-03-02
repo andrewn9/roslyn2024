@@ -1,5 +1,5 @@
 import './style.css'
-import { Engine, Runner, Bodies, Composite, IChamferableBodyDefinition, Body, Vector} from 'matter-js'
+import { Engine, Runner, Bodies, Composite, IChamferableBodyDefinition, Body, Vector, World} from 'matter-js'
 import { Serializer } from 'matter-tools'
 import * as PIXI from 'pixi.js'
 
@@ -36,6 +36,10 @@ function createBox(x: number, y: number, w: number, h: number, source: PIXI.Text
 
     sprite.on("click", () => {
         selected = body;
+        if (mode === 3) {
+            app.stage.removeChild(sprite);
+            World.remove(engine.world, selected);
+        }
     });
 
     Composite.add(engine.world, body);
@@ -44,9 +48,10 @@ function createBox(x: number, y: number, w: number, h: number, source: PIXI.Text
     return body;
 }
 
-const maxF = 3.5;
-const maxDrag = 45000;
+const maxF = 2.5;
+const maxDrag = 20000;
 var compression = 0;
+var spring_force: Vector;
 
 window.addEventListener("auxclick", (e) => {
     if (e.button === 1) {
@@ -74,15 +79,14 @@ window.addEventListener("pointerdown", (e) => {
 
         let current = {x: ev.clientX, y: ev.clientY};
         let wpos = Vector.add(player.position, Vector.sub(current,start));
+        let move = Vector.normalise(Vector.sub(wpos, player.position));
         let mag = Math.min(Vector.magnitudeSquared(Vector.sub(wpos, player.position)) / maxDrag, 1);
+        compression = mag;
+        spring_force = Vector.mult(move, mag * maxF);
+        spring_force.x *= -1;
+        spring_force.y *= -1;
 
-        if (logo) {
-            logo.height = 50/(mag+1);
-            // logo.anchor.y = 1;
-        }
-        
         if (mode === 1) {
-            engine.gravity.scale = 0;
             sprite.x = Math.min(e.clientX, ev.clientX);
             sprite.y = Math.min(e.clientY, ev.clientY);
             sprite.width = Math.abs(ev.clientX - e.clientX);
@@ -94,11 +98,13 @@ window.addEventListener("pointerdown", (e) => {
             }
             Body.setAngle(selected, Math.atan2(ev.clientY - e.clientY, ev.clientX - e.clientX));
             // selected.angle = ;
-        } else if (mode === 2) {
-            engine.gravity.scale = 0;
-        } else {
-            engine.gravity.scale = 0.001;
         }
+
+        if (logo) {
+            logo.height = 50/(mag+1);
+            // logo.anchor.y = 1;
+        }
+
     }
 
     function pointerup(ev: PointerEvent) {
@@ -107,17 +113,7 @@ window.addEventListener("pointerdown", (e) => {
         
         x += w/2;
         y += h/2;
-
-        let mag = Vector.magnitudeSquared(Vector.sub({x: x, y:y}, start));
-        let direction = Vector.normalise(Vector.sub({x: x, y:y}, start));
-        direction.x *=-1;
-        direction.y *=-1;
-        
-        mag = mag/maxDrag * maxF;
-        mag = Math.min(mag, maxF);
         // console.log(mag);
-
-        let force = Vector.mult(direction, mag);
 
         x -= app.view.width/2;
         y -= app.view.height/2;
@@ -127,18 +123,13 @@ window.addEventListener("pointerdown", (e) => {
         h /=camera.scale;
         x += camera.x;
         y += camera.y;
-
-
-        console.log(`${force.x} ${force.y}`)
-
-        Body.applyForce(player, player.position, force);
         // createBox(x, y, w, h, "gray.png", { isStatic: true });
 
         if (logo) {
             logo.height = 50;
         }
-        if (mode === 0) {
-            Body.applyForce(player, player.position, force);
+        if (mode === 0 && spring_force) {
+            Body.applyForce(player, player.position, spring_force);
         } else if (mode === 1) {
             createBox(x, y, w, h, "gray.png", { isStatic: true });
         }
@@ -167,7 +158,7 @@ engine.timing.timeScale = 1;
 
 const map: Body[] = [];
 
-const player = createBox(0, 0, 10, 10, "logo.png", {density: 1}, false);
+const player = createBox(0, 0, 10, 10, "logo.png", {density: 1, restitution: 0.8}, false);
 
 createBox(0, 100, 100, 10, "gray.png", { isStatic: true });
 
@@ -204,7 +195,7 @@ const serializer = Serializer.create();
 });
 
 (document.querySelector("#mode") as HTMLButtonElement).addEventListener("click", (e)=>{
-    mode = (mode+1) % 3;
+    mode = (mode+1) % 4;
 
     const button = e.target as HTMLButtonElement;
     if (mode === 0) {
@@ -213,6 +204,8 @@ const serializer = Serializer.create();
         button.innerText = "Build";
     } else if (mode === 2) {
         button.innerText = "Edit";
+    } else if (mode === 3) {
+        button.innerText = "Delete";
     }
 });
 
@@ -225,6 +218,8 @@ window.addEventListener("keypress", (e) => {
         mode = 1;
     } else if (e.key === "3") {
         mode = 2;
+    }  else if (e.key === "4") {
+        mode = 3;
     }
 
     const button = document.querySelector("#mode") as HTMLButtonElement;
@@ -234,6 +229,14 @@ window.addEventListener("keypress", (e) => {
         button.innerText = "Build";
     } else if (mode === 2) {
         button.innerText = "Edit";
+    } else if (mode === 3) {
+        button.innerText = "Delete";
+    }
+
+    if (mode > 0) {
+        engine.gravity.scale = 0;
+    } else {
+        engine.gravity.scale = 0.001;
     }
 });
 
