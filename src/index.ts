@@ -1,5 +1,6 @@
 import './style.css'
-import { Engine, Render, Runner, Bodies, Composite, IChamferableBodyDefinition, Body } from 'matter-js'
+import { Engine, Runner, Bodies, Composite, IChamferableBodyDefinition, Body } from 'matter-js'
+import { Serializer } from 'matter-tools'
 import * as PIXI from 'pixi.js'
 
 const bodies: [PIXI.Sprite, Body][] = [];
@@ -66,11 +67,11 @@ const app = new PIXI.Application({ resizeTo: window });
 document.body.appendChild(app.view as HTMLCanvasElement);
 
 const engine = Engine.create();
+engine.timing.timeScale = 0.2;
 
 const player = createBox(0, 0, 10, 10, "gray.png", {}, false);
 
 const map: Body[] = [];
-
 
 createBox(0, 100, 100, 10, "gray.png", { isStatic: true });
 
@@ -85,9 +86,15 @@ app.ticker.add(() => {
 
         sprite.x = (body.position.x - camera.x) * camera.scale + app.view.width/2;
         sprite.y = (body.position.y - camera.y) * camera.scale + app.view.height/2;
-        // sprite.scale.x = camera.scale;
-        // sprite.scale.y = camera.scale;
         
         sprite.angle = body.angle * 180/Math.PI;
     });
+});
+
+const serializer = Serializer.create();
+(document.querySelector("#export") as HTMLButtonElement).addEventListener("click", ()=>{
+    const link = document.createElement("a");
+    link.href = `data:text/,${Serializer.serialise(serializer, engine.world)}`;
+    link.download = "map.json";
+    link.click();
 });
