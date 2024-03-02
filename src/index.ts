@@ -11,9 +11,11 @@ function createBox(x: number, y: number, w: number, h: number, source: PIXI.Text
         map.push(body);
     }
 
-    const sprite = new PIXI.Sprite(PIXI.Texture.from(source));
-    sprite.height = h;
-    sprite.width = w;
+    const texture = PIXI.Texture.from(source);
+    
+    const sprite = new PIXI.Sprite(texture);
+    sprite.height = h * camera.scale;
+    sprite.width = w * camera.scale;
     sprite.x = x;
     sprite.y = y;
     sprite.anchor.x = 0.5;
@@ -34,6 +36,18 @@ window.addEventListener("pointerdown", (e) => {
         x += w/2;
         y += h/2;
 
+        x -= app.view.width/2;
+        y -= app.view.height/2;
+        x /= camera.scale;
+        y /= camera.scale;
+        w /= camera.scale;
+        h /=camera.scale;
+        x += camera.x;
+        y += camera.y;
+
+
+        console.log(`${x} ${y}`)
+
         createBox(x, y, w, h, "gray.png", { isStatic: true });
 
         window.removeEventListener("pointerup", pointerup);
@@ -45,6 +59,7 @@ window.addEventListener("pointerdown", (e) => {
 const camera = {
     x: 0,
     y: 0,
+    scale: 5,
 };
 
 const app = new PIXI.Application({ resizeTo: window });
@@ -68,8 +83,10 @@ app.ticker.add(() => {
         const sprite = tuple[0];
         const body = tuple[1];
 
-        sprite.x = body.position.x - camera.x + app.view.width/2;
-        sprite.y = body.position.y - camera.y + app.view.height/2;
+        sprite.x = (body.position.x - camera.x) * camera.scale + app.view.width/2;
+        sprite.y = (body.position.y - camera.y) * camera.scale + app.view.height/2;
+        // sprite.scale.x = camera.scale;
+        // sprite.scale.y = camera.scale;
         
         sprite.angle = body.angle * 180/Math.PI;
     });
