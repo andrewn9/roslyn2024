@@ -44,7 +44,7 @@ function createBox(x: number, y: number, w: number, h: number, source: PIXI.Text
     return body;
 }
 
-const maxF = 2.5;
+const maxF = 4;
 const maxDrag = 20000;
 var compression = 0;
 var spring_force: Vector;
@@ -144,16 +144,23 @@ const app = new PIXI.Application({ resizeTo: window });
 document.body.appendChild(app.view as HTMLCanvasElement);
 
 const engine = Engine.create();
-engine.timing.timeScale = 1;
+engine.timing.timeScale = 0.8;
 
-const player = createBox(0, 0, 10, 10, "logo.png", {density: 1, restitution: 0.8});
-
+const player = createBox(0, 0, 10, 10, "logo.png", {density: 1, friction: 1, restitution: 0.8});
 
 createBox(0, 10, 100, 10, "gray.png", { isStatic: true });
 
-setInterval(() => {
-    Engine.update(engine, 16);
-}, 16)
+
+let time: number;
+function loop(t) {
+    const dt = Math.min(t-time, 100);
+    time = t;
+    console.log(dt);
+    requestAnimationFrame(loop)
+    Engine.update(engine, dt || 16);
+}
+
+requestAnimationFrame(loop)
 
 app.ticker.add((dt) => {
     camera.y += (player.position.y - camera.y) * 0.1;
@@ -186,7 +193,8 @@ text.position.y = 10;
 
 app.stage.addChild(text);
 
-loadedMap.forEach((saved) => {
+loadedMap.forEach((map) => {
+    const saved = map as any;
     const body = createBox(saved.x, saved.y, saved.w, saved.h, "gray.png", { isStatic: true });
     Body.setAngle(body, saved.a);
 });
