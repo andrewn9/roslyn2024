@@ -68,7 +68,7 @@ window.addEventListener("pointerdown", (e) => {
     const sprite = new PIXI.Sprite(PIXI.Texture.from("gray.png"));
     app.stage.addChild(sprite);
     sprite.height = 0;
-
+    
     function pointermove(ev: PointerEvent) {
         if (e.pointerId !== ev.pointerId) return;
 
@@ -92,7 +92,9 @@ window.addEventListener("pointerdown", (e) => {
                 selected.inertia = Infinity;
                 selected.inverseInertia = 0;
             }
-            Body.setAngle(selected, Math.atan2(ev.clientY - e.clientY, ev.clientX - e.clientX));
+            console.log(ev.clientY);
+            console.log((selected.position.y - camera.y) * camera.scale + app.view.height/2);
+            Body.setAngle(selected, Math.atan2(ev.clientY - (selected.position.y - camera.y) * camera.scale - app.view.height/2, ev.clientX - (selected.position.x - camera.x) * camera.scale - app.view.width/2));
             // selected.angle = ;
         } else if (mode === 2) {
             engine.gravity.scale = 0;
@@ -167,15 +169,13 @@ engine.timing.timeScale = 1;
 
 const map: Body[] = [];
 
-const player = createBox(0, 0, 10, 10, "logo.png", {density: 1}, false);
+const player = createBox(0, 0, 10, 10, "logo.png", {density: 1,}, false);
 
-createBox(0, 100, 100, 10, "gray.png", { isStatic: true });
 
-// const runner = Runner.create();
-// Runner.run(runner, engine);
+createBox(0, 10, 100, 10, "gray.png", { isStatic: true });
 
 app.ticker.add((dt) => {
-    Engine.update(engine, dt/60*1000);
+    Engine.update(engine, Math.min(dt/60*1000, 50));
 
     camera.y += (player.position.y - camera.y) * 0.1;
     bodies.forEach((tuple) => {
@@ -193,7 +193,19 @@ app.ticker.add((dt) => {
         
         sprite.angle = body.angle * 180/Math.PI;
     });
+
+    text.text = `Elevation: ${Math.round(-player.position.y)}`;
 });
+
+let text = new PIXI.Text("Elevation: 0", {
+    stroke: "#fff",
+    strokeThickness: 5,
+    lineJoin: "round",
+});
+text.position.x = 10;
+text.position.y = 10;
+
+app.stage.addChild(text);
 
 const serializer = Serializer.create();
 (document.querySelector("#export") as HTMLButtonElement).addEventListener("click", ()=>{
