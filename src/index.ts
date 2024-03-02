@@ -1,11 +1,14 @@
 import './style.css'
-import { Engine, Runner, Bodies, Composite, IChamferableBodyDefinition, Body, Vector} from 'matter-js'
+import { Engine, Render, Runner, Bodies, Composite, IChamferableBodyDefinition, Body, Vector} from 'matter-js'
 import { Serializer } from 'matter-tools'
 import * as PIXI from 'pixi.js'
-import { normalizePath } from 'vite';
 
 const bodies: [PIXI.Sprite, Body][] = [];
 var logo: PIXI.Sprite;
+
+let mode = 0;
+
+let selected: Body|undefined;
 
 function createBox(x: number, y: number, w: number, h: number, source: PIXI.TextureSource, options?: IChamferableBodyDefinition, addMap = true) {
     const body = Bodies.rectangle(x, y, w, h, options);
@@ -29,6 +32,11 @@ function createBox(x: number, y: number, w: number, h: number, source: PIXI.Text
     }
 
     app.stage.addChild(sprite);
+    sprite.eventMode = "dynamic";
+
+    sprite.on("click", () => {
+        selected = body;
+    });
 
     Composite.add(engine.world, body);
     bodies.push([sprite, body]);
@@ -41,9 +49,7 @@ const maxDrag = 45000;
 var compression = 0;
 
 window.addEventListener("pointerdown", (e) => {
-
     let start = {x: e.clientX, y: e.clientY};
-    console.log("start");
     const sprite = new PIXI.Sprite(PIXI.Texture.from("gray.png"));
     app.stage.addChild(sprite);
     sprite.height = 0;
@@ -62,6 +68,20 @@ window.addEventListener("pointerdown", (e) => {
 
         if (logo) {
             logo.height = (1-mag) * logo.texture.height;
+        }
+        
+        if (mode === 1) {
+            sprite.x = Math.min(e.clientX, ev.clientX);
+            sprite.y = Math.min(e.clientY, ev.clientY);
+            sprite.width = Math.abs(ev.clientX - e.clientX);
+            sprite.height = Math.abs(ev.clientY - e.clientY);
+        } else if (mode === 2 && selected) {
+            if (selected.isStatic) {
+                selected.inertia = Infinity;
+                selected.inverseInertia = 0;
+            }
+            Body.setAngle(selected, Math.atan2(ev.clientY - e.clientY, ev.clientX - e.clientX));
+            // selected.angle = ;
         }
     }
 
@@ -100,6 +120,10 @@ window.addEventListener("pointerdown", (e) => {
 
         if (logo) {
             logo.height = logo.texture.height;
+        if (mode === 0) {
+            Body.applyForce(player, player.position, force);
+        } else if (mode === 1) {
+            createBox(x, y, w, h, "gray.png", { isStatic: true });
         }
 
         app.stage.removeChild(sprite);
@@ -139,6 +163,12 @@ app.ticker.add(() => {
         const sprite = tuple[0];
         const body = tuple[1];
 
+        if (body === selected && mode !== 0) {
+            sprite.tint = 0xFF0000;
+        } else {
+            sprite.tint = 0xFFFFFF;
+        }
+
         sprite.x = (body.position.x - camera.x) * camera.scale + app.view.width/2;
         sprite.y = (body.position.y - camera.y) * camera.scale + app.view.height/2;
         
@@ -153,3 +183,39 @@ const serializer = Serializer.create();
     link.download = "map.json";
     link.click();
 });
+
+(document.querySelector("#mode") as HTMLButtonElement).addEventListener("click", (e)=>{
+    mode = (mode+1) % 3;
+
+    const button = e.target as HTMLButtonElement;
+    if (mode === 0) {
+        button.innerText = "Control";
+    } else if (mode === 1) {
+        button.innerText = "Build";
+    } else if (mode === 2) {
+        button.innerText = "Edit";
+    }
+});
+
+window.addEventListener("keypress", (e) => {
+    if (e.repeat) return;
+
+    if (e.key === "1") {
+        mode = 0;
+    } else if (e.key === "2") {
+        mode = 1;
+    } else if (e.key === "3") {
+        mode = 2;
+    }
+    const button = document.querySelector("#mode") as HTMLButtonElement;
+    if (mode === 0) {
+        button.innerText = "Control";
+    } else if (mode === 1) {
+        button.innerText = "Build";
+    } else if (mode === 2) {
+        button.innerText = "Edit";
+    }
+});
+
+// const render = Render.create({canvas: app.view as HTMLCanvasElement, engine: engine});
+// Render.run(render);
