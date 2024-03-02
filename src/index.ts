@@ -1,7 +1,7 @@
 import './style.css'
 import { Engine, Runner, Bodies, Composite, IChamferableBodyDefinition, Body, Vector, World} from 'matter-js'
-import { Serializer } from 'matter-tools'
 import * as PIXI from 'pixi.js'
+import loadedMap from './map.json'
 
 const bodies: [PIXI.Sprite, Body][] = [];
 var logo: PIXI.Sprite;
@@ -10,12 +10,8 @@ let mode = 0;
 
 let selected: Body|undefined;
 
-function createBox(x: number, y: number, w: number, h: number, source: PIXI.TextureSource, options?: IChamferableBodyDefinition, addMap = true) {
+function createBox(x: number, y: number, w: number, h: number, source: PIXI.TextureSource, options?: IChamferableBodyDefinition) {
     const body = Bodies.rectangle(x, y, w, h, options);
-    
-    if (addMap) {
-        map.push(body);
-    }
 
     const texture = PIXI.Texture.from(source);
     
@@ -92,12 +88,6 @@ window.addEventListener("pointerdown", (e) => {
             sprite.width = Math.abs(ev.clientX - e.clientX);
             sprite.height = Math.abs(ev.clientY - e.clientY);
         } else if (mode === 2 && selected) {
-            if (selected.isStatic) {
-                selected.inertia = Infinity;
-                selected.inverseInertia = 0;
-            }
-            console.log(ev.clientY);
-            console.log((selected.position.y - camera.y) * camera.scale + app.view.height/2);
             Body.setAngle(selected, Math.atan2(ev.clientY - (selected.position.y - camera.y) * camera.scale - app.view.height/2, ev.clientX - (selected.position.x - camera.x) * camera.scale - app.view.width/2));
             // selected.angle = ;
         }
@@ -115,7 +105,6 @@ window.addEventListener("pointerdown", (e) => {
         
         x += w/2;
         y += h/2;
-        // console.log(mag);
 
         x -= app.view.width/2;
         y -= app.view.height/2;
@@ -125,7 +114,6 @@ window.addEventListener("pointerdown", (e) => {
         h /=camera.scale;
         x += camera.x;
         y += camera.y;
-        // createBox(x, y, w, h, "gray.png", { isStatic: true });
 
         if (logo) {
             logo.height = 50;
@@ -158,9 +146,7 @@ document.body.appendChild(app.view as HTMLCanvasElement);
 const engine = Engine.create();
 engine.timing.timeScale = 1;
 
-const map: Body[] = [];
-
-const player = createBox(0, 0, 10, 10, "logo.png", {density: 1, restitution: 0.8}, false);
+const player = createBox(0, 0, 10, 10, "logo.png", {density: 1, restitution: 0.8});
 
 
 createBox(0, 10, 100, 10, "gray.png", { isStatic: true });
@@ -200,12 +186,25 @@ text.position.y = 10;
 
 app.stage.addChild(text);
 
-const serializer = Serializer.create();
+loadedMap.forEach((saved) => {
+    const body = createBox(saved.x, saved.y, saved.w, saved.h, "gray.png", { isStatic: true });
+    Body.setAngle(body, saved.a);
+});
+
 (document.querySelector("#export") as HTMLButtonElement).addEventListener("click", ()=>{
-    const link = document.createElement("a");
-    link.href = `data:text/,${Serializer.serialise(serializer, engine.world)}`;
-    link.download = "map.json";
-    link.click();
+    let i = 0;
+    const map: {x: number, y: number, w: number, h: number, a: number}[] = [];
+    bodies.forEach((tuple) => {
+        const sprite = tuple[0];
+        const body = tuple[1];
+
+        if (body === player) return;
+
+        map.push({x: body.position.x, y: body.position.y, h: sprite.height/camera.scale, w: sprite.width/camera.scale, a: body.angle});
+        i++;
+    });
+
+    console.log(JSON.stringify(map));
 });
 
 (document.querySelector("#mode") as HTMLButtonElement).addEventListener("click", (e)=>{
