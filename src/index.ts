@@ -1,5 +1,5 @@
 import './style.css'
-import { Engine, Render, Runner, Bodies, Composite, IChamferableBodyDefinition, Body, Vector} from 'matter-js'
+import { Engine, Runner, Bodies, Composite, IChamferableBodyDefinition, Body, Vector} from 'matter-js'
 import { Serializer } from 'matter-tools'
 import * as PIXI from 'pixi.js'
 
@@ -48,6 +48,21 @@ const maxF = 3.5;
 const maxDrag = 45000;
 var compression = 0;
 
+window.addEventListener("auxclick", (e) => {
+    if (e.button === 1) {
+        let x = e.clientX, y = e.clientY;
+
+        x -= app.view.width/2;
+        y -= app.view.height/2;
+        x /= camera.scale;
+        y /= camera.scale;
+        x += camera.x;
+        y += camera.y;
+
+        Body.setPosition(player, {x: x, y: y});
+    }
+});
+
 window.addEventListener("pointerdown", (e) => {
     let start = {x: e.clientX, y: e.clientY};
     const sprite = new PIXI.Sprite(PIXI.Texture.from("gray.png"));
@@ -62,7 +77,8 @@ window.addEventListener("pointerdown", (e) => {
         let mag = Math.min(Vector.magnitudeSquared(Vector.sub(wpos, player.position)) / maxDrag, 1);
 
         if (logo) {
-            logo.height = (1-mag) * 300;
+            logo.height = 50/(mag+1);
+            // logo.anchor.y = 1;
         }
         
         if (mode === 1) {
@@ -119,7 +135,7 @@ window.addEventListener("pointerdown", (e) => {
         // createBox(x, y, w, h, "gray.png", { isStatic: true });
 
         if (logo) {
-            logo.height = 300;
+            logo.height = 50;
         }
         if (mode === 0) {
             Body.applyForce(player, player.position, force);
@@ -155,10 +171,12 @@ const player = createBox(0, 0, 10, 10, "logo.png", {density: 1}, false);
 
 createBox(0, 100, 100, 10, "gray.png", { isStatic: true });
 
-const runner = Runner.create();
-Runner.run(runner, engine);
+// const runner = Runner.create();
+// Runner.run(runner, engine);
 
-app.ticker.add(() => {
+app.ticker.add((dt) => {
+    Engine.update(engine, dt/60*1000);
+
     camera.y += (player.position.y - camera.y) * 0.1;
     bodies.forEach((tuple) => {
         const sprite = tuple[0];
@@ -208,6 +226,7 @@ window.addEventListener("keypress", (e) => {
     } else if (e.key === "3") {
         mode = 2;
     }
+
     const button = document.querySelector("#mode") as HTMLButtonElement;
     if (mode === 0) {
         button.innerText = "Control";
