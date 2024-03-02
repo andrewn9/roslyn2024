@@ -30,6 +30,19 @@ function createBox(x: number, y: number, w: number, h: number, source: PIXI.Text
 }
 
 window.addEventListener("pointerdown", (e) => {
+    const sprite = new PIXI.Sprite(PIXI.Texture.from("gray.png"));
+    app.stage.addChild(sprite);
+    sprite.height = 0;
+
+    function pointermove(ev: PointerEvent) {
+        if (e.pointerId !== ev.pointerId) return;
+
+        sprite.x = Math.min(e.clientX, ev.clientX);
+        sprite.y = Math.min(e.clientY, ev.clientY);
+        sprite.width = Math.abs(ev.clientX - e.clientX);
+        sprite.height = Math.abs(ev.clientY - e.clientY);
+    }
+
     function pointerup(ev: PointerEvent) {
         if (e.pointerId !== ev.pointerId) return;
         let x = Math.min(e.clientX, ev.clientX), y = Math.min(e.clientY, ev.clientY), w = Math.abs(ev.clientX-e.clientX), h = Math.abs(ev.clientY-e.clientY);
@@ -51,9 +64,12 @@ window.addEventListener("pointerdown", (e) => {
 
         createBox(x, y, w, h, "gray.png", { isStatic: true });
 
+        app.stage.removeChild(sprite);
         window.removeEventListener("pointerup", pointerup);
+        window.removeEventListener("pointermove", pointermove);
     }
 
+    window.addEventListener("pointermove", pointermove);
     window.addEventListener("pointerup", pointerup);
 });
 
