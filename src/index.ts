@@ -165,9 +165,11 @@ const player = createBox(0, 0, 10, 10, "logo.png", {density: 1, restitution: 0.8
 
 createBox(0, 10, 100, 10, "gray.png", { isStatic: true });
 
-app.ticker.add((dt) => {
-    Engine.update(engine, Math.min(dt/60*1000, 50));
+setInterval(() => {
+    Engine.update(engine, 16);
+}, 16)
 
+app.ticker.add((dt) => {
     camera.y += (player.position.y - camera.y) * 0.1;
     bodies.forEach((tuple) => {
         const sprite = tuple[0];
