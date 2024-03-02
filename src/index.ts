@@ -5,6 +5,7 @@ import * as PIXI from 'pixi.js'
 import { normalizePath } from 'vite';
 
 const bodies: [PIXI.Sprite, Body][] = [];
+var logo: PIXI.Sprite;
 
 function createBox(x: number, y: number, w: number, h: number, source: PIXI.TextureSource, options?: IChamferableBodyDefinition, addMap = true) {
     const body = Bodies.rectangle(x, y, w, h, options);
@@ -22,6 +23,11 @@ function createBox(x: number, y: number, w: number, h: number, source: PIXI.Text
     sprite.y = y;
     sprite.anchor.x = 0.5;
     sprite.anchor.y = 0.5;
+
+    if (source == "logo.png") {
+        logo = sprite;
+    }
+
     app.stage.addChild(sprite);
 
     Composite.add(engine.world, body);
@@ -29,6 +35,10 @@ function createBox(x: number, y: number, w: number, h: number, source: PIXI.Text
 
     return body;
 }
+
+const maxF = 3.5;
+const maxDrag = 45000;
+var compression = 0;
 
 window.addEventListener("pointerdown", (e) => {
 
@@ -45,6 +55,14 @@ window.addEventListener("pointerdown", (e) => {
         sprite.y = Math.min(e.clientY, ev.clientY);
         sprite.width = Math.abs(ev.clientX - e.clientX);
         sprite.height = Math.abs(ev.clientY - e.clientY);
+
+        let current = {x: ev.clientX, y: ev.clientY};
+        let wpos = Vector.add(player.position, Vector.sub(current,start));
+        let mag = Math.min(Vector.magnitudeSquared(Vector.sub(wpos, player.position)) / maxDrag, 1);
+
+        if (logo) {
+            logo.height = (1-mag) * logo.texture.height;
+        }
     }
 
     function pointerup(ev: PointerEvent) {
@@ -58,8 +76,12 @@ window.addEventListener("pointerdown", (e) => {
         let direction = Vector.normalise(Vector.sub({x: x, y:y}, start));
         direction.x *=-1;
         direction.y *=-1;
-        console.log(mag);
-        let force = Vector.mult(direction, mag/10000);
+        
+        mag = mag/maxDrag * maxF;
+        mag = Math.min(mag, maxF);
+        // console.log(mag);
+
+        let force = Vector.mult(direction, mag);
 
         x -= app.view.width/2;
         y -= app.view.height/2;
@@ -76,6 +98,9 @@ window.addEventListener("pointerdown", (e) => {
         Body.applyForce(player, player.position, force);
         // createBox(x, y, w, h, "gray.png", { isStatic: true });
 
+        if (logo) {
+            logo.height = logo.texture.height;
+        }
 
         app.stage.removeChild(sprite);
         window.removeEventListener("pointerup", pointerup);
@@ -92,15 +117,16 @@ const camera = {
     scale: 5,
 };
 
+
 const app = new PIXI.Application({ resizeTo: window });
 document.body.appendChild(app.view as HTMLCanvasElement);
 
 const engine = Engine.create();
-engine.timing.timeScale = 0.2;
-
-const player = createBox(0, 0, 10, 10, "gray.png", {density: 1}, false);
+engine.timing.timeScale = 1;
 
 const map: Body[] = [];
+
+const player = createBox(0, 0, 10, 10, "logo.png", {density: 1}, false);
 
 createBox(0, 100, 100, 10, "gray.png", { isStatic: true });
 
