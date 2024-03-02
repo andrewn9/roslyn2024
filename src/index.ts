@@ -1,7 +1,17 @@
+import './style.css'
 import { Engine, Render, Runner, Bodies, Composite } from 'matter-js'
 
 const canvas = document.createElement("canvas");
 document.body.appendChild(canvas);
+
+function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+}
+window.addEventListener("resize", resize);
+document.addEventListener("DOMContentLoaded", () => {
+    resize();
+});
 
 const engine = Engine.create();
 
