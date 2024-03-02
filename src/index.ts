@@ -66,6 +66,7 @@ window.addEventListener("pointerdown", (e) => {
         }
         
         if (mode === 1) {
+            engine.gravity.scale = 0;
             sprite.x = Math.min(e.clientX, ev.clientX);
             sprite.y = Math.min(e.clientY, ev.clientY);
             sprite.width = Math.abs(ev.clientX - e.clientX);
@@ -77,6 +78,10 @@ window.addEventListener("pointerdown", (e) => {
             }
             Body.setAngle(selected, Math.atan2(ev.clientY - e.clientY, ev.clientX - e.clientX));
             // selected.angle = ;
+        } else if (mode === 2) {
+            engine.gravity.scale = 0;
+        } else {
+            engine.gravity.scale = 0.001;
         }
     }
 
