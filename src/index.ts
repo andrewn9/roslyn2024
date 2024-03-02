@@ -13,6 +13,24 @@ document.addEventListener("DOMContentLoaded", () => {
     resize();
 });
 
+window.addEventListener("pointerdown", (e) => {
+    function pointerup(ev: PointerEvent) {
+        if (e.pointerId !== ev.pointerId) return;
+        let x = Math.min(e.clientX, ev.clientX), y = Math.min(e.clientY, ev.clientY), w = Math.abs(ev.clientX-e.clientX), h = Math.abs(ev.clientY-e.clientY);
+        
+        x += w/2;
+        y += h/2;
+
+        const body = Bodies.rectangle(x, y, w, h, { isStatic: true });
+        map.push(body);
+        Composite.add(engine.world, body);
+
+        window.removeEventListener("pointerup", pointerup);
+    }
+
+    window.addEventListener("pointerup", pointerup);
+});
+
 const engine = Engine.create();
 
 const render = Render.create({
