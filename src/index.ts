@@ -40,6 +40,11 @@ function createBox(x: number, y: number, w: number, h: number, source: PIXI.Text
     sprite.on("click", () => {
         selected = body;
         if (mode === 3) {
+            const index = bodies.indexOf([sprite, body]);
+            if (index > -1) { // only splice array when item is found
+                bodies.splice(index, 1); // 2nd parameter means remove one item only
+            }
+
             app.stage.removeChild(sprite);
             World.remove(engine.world, selected);
         }
@@ -57,7 +62,8 @@ var compression = 0;
 var spring_force: Vector;
 
 window.addEventListener("auxclick", (e) => {
-    if (e.button === 1) {
+    if (e.button === 2) {
+        e.preventDefault();
         let x = e.clientX, y = e.clientY;
 
         x -= app.view.width/2;
@@ -213,6 +219,8 @@ loadedMap.forEach((map) => {
     const body = createBox(saved.x, saved.y, saved.w, saved.h, "gray.png", { isStatic: true });
     Body.setAngle(body, saved.a);
 });
+console.log(loadedMap.length);
+console.log(bodies.length);
 
 (document.querySelector("#export") as HTMLButtonElement).addEventListener("click", ()=>{
     let i = 0;
@@ -256,6 +264,8 @@ window.addEventListener("keypress", (e) => {
         mode = 2;
     }  else if (e.key === "4") {
         mode = 3;
+    } else if (e.key === "g") {
+        console.log(bodies.length);
     }
 
     const button = document.querySelector("#mode") as HTMLButtonElement;
