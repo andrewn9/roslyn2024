@@ -1,10 +1,6 @@
-<img src="https://dev-to-uploads.s3.amazonaws.com/uploads/articles/th5xamgrr6se0x5ro4g6.png" alt="Logo" width="100%" height="50%">
+# Hooke's Hike
 
-
-# Project Title
-
-A brief description of what this project does and who it's for
-
+Climb through the coil of my monitor and break free using nothing but a spring.
 
 ### Authors
 
@@ -15,17 +11,17 @@ A brief description of what this project does and who it's for
 ### Demo
 Insert gif or link to demo
 
-
-### Features
-
-- 
-
-
 ### Deployment
 
-To deploy this project run
+To deploy this project run:
 
 ```bash
     npm run build
+```
+
+Or, to run locally:
+
+```bash
+    npm run dev
 ```
 
