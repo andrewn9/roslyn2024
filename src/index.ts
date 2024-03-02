@@ -1,6 +1,7 @@
 import './style.css'
-import { Engine, Render, Runner, Bodies, Composite, IChamferableBodyDefinition, Body } from 'matter-js'
+import { Engine, World, Body, Render, Runner, Bodies, Events, Composite, Mouse, Constraint, MouseConstraint, Vector} from 'matter-js'
 import * as PIXI from 'pixi.js'
+import { normalizePath } from 'vite';
 
 const bodies: [PIXI.Sprite, Body][] = [];
 
@@ -29,12 +30,23 @@ function createBox(x: number, y: number, w: number, h: number, source: PIXI.Text
 }
 
 window.addEventListener("pointerdown", (e) => {
+
+    let start = {x: e.clientX, y: e.clientY};
+    console.log("start");
+
     function pointerup(ev: PointerEvent) {
         if (e.pointerId !== ev.pointerId) return;
         let x = Math.min(e.clientX, ev.clientX), y = Math.min(e.clientY, ev.clientY), w = Math.abs(ev.clientX-e.clientX), h = Math.abs(ev.clientY-e.clientY);
         
         x += w/2;
         y += h/2;
+
+        let mag = Vector.magnitudeSquared(Vector.sub({x: x, y:y}, start));
+        let direction = Vector.normalise(Vector.sub({x: x, y:y}, start));
+        direction.x *=-1;
+        direction.y *=-1;
+        console.log(mag);
+        let force = Vector.mult(direction, mag/10000);
 
         x -= app.view.width/2;
         y -= app.view.height/2;
@@ -46,9 +58,10 @@ window.addEventListener("pointerdown", (e) => {
         y += camera.y;
 
 
-        console.log(`${x} ${y}`)
+        console.log(`${force.x} ${force.y}`)
 
-        createBox(x, y, w, h, "gray.png", { isStatic: true });
+        Body.applyForce(player, player.position, force);
+        
 
         window.removeEventListener("pointerup", pointerup);
     }
@@ -67,7 +80,7 @@ document.body.appendChild(app.view as HTMLCanvasElement);
 
 const engine = Engine.create();
 
-const player = createBox(0, 0, 10, 10, "gray.png", {}, false);
+const player = createBox(0, 0, 10, 10, "gray.png", {density: 1}, false);
 
 const map: Body[] = [];
 
