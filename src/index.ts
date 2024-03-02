@@ -1,5 +1,10 @@
 import './style.css'
+<<<<<<< HEAD
 import { Engine, World, Body, Render, Runner, Bodies, Events, Composite, Mouse, Constraint, MouseConstraint, Vector} from 'matter-js'
+=======
+import { Engine, Runner, Bodies, Composite, IChamferableBodyDefinition, Body } from 'matter-js'
+import { Serializer } from 'matter-tools'
+>>>>>>> 0a4b4c9f2cc1cd6d5aaa83e037fd283c7ce28f05
 import * as PIXI from 'pixi.js'
 import { normalizePath } from 'vite';
 
@@ -33,6 +38,18 @@ window.addEventListener("pointerdown", (e) => {
 
     let start = {x: e.clientX, y: e.clientY};
     console.log("start");
+    const sprite = new PIXI.Sprite(PIXI.Texture.from("gray.png"));
+    app.stage.addChild(sprite);
+    sprite.height = 0;
+
+    function pointermove(ev: PointerEvent) {
+        if (e.pointerId !== ev.pointerId) return;
+
+        sprite.x = Math.min(e.clientX, ev.clientX);
+        sprite.y = Math.min(e.clientY, ev.clientY);
+        sprite.width = Math.abs(ev.clientX - e.clientX);
+        sprite.height = Math.abs(ev.clientY - e.clientY);
+    }
 
     function pointerup(ev: PointerEvent) {
         if (e.pointerId !== ev.pointerId) return;
@@ -63,9 +80,12 @@ window.addEventListener("pointerdown", (e) => {
         Body.applyForce(player, player.position, force);
         
 
+        app.stage.removeChild(sprite);
         window.removeEventListener("pointerup", pointerup);
+        window.removeEventListener("pointermove", pointermove);
     }
 
+    window.addEventListener("pointermove", pointermove);
     window.addEventListener("pointerup", pointerup);
 });
 
@@ -79,11 +99,11 @@ const app = new PIXI.Application({ resizeTo: window });
 document.body.appendChild(app.view as HTMLCanvasElement);
 
 const engine = Engine.create();
+engine.timing.timeScale = 0.2;
 
 const player = createBox(0, 0, 10, 10, "gray.png", {density: 1}, false);
 
 const map: Body[] = [];
-
 
 createBox(0, 100, 100, 10, "gray.png", { isStatic: true });
 
@@ -98,9 +118,15 @@ app.ticker.add(() => {
 
         sprite.x = (body.position.x - camera.x) * camera.scale + app.view.width/2;
         sprite.y = (body.position.y - camera.y) * camera.scale + app.view.height/2;
-        // sprite.scale.x = camera.scale;
-        // sprite.scale.y = camera.scale;
         
         sprite.angle = body.angle * 180/Math.PI;
     });
+});
+
+const serializer = Serializer.create();
+(document.querySelector("#export") as HTMLButtonElement).addEventListener("click", ()=>{
+    const link = document.createElement("a");
+    link.href = `data:text/,${Serializer.serialise(serializer, engine.world)}`;
+    link.download = "map.json";
+    link.click();
 });
