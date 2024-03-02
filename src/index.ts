@@ -230,6 +230,8 @@ console.log(bodies.length);
         const body = tuple[1];
 
         if (body === player) return;
+        console.log(app.stage.children.findIndex((value) => {return value==sprite}) === -1);
+        if (app.stage.children.findIndex((value) => {return value==sprite}) === -1) return; 
 
         map.push({x: body.position.x, y: body.position.y, h: sprite.height/camera.scale, w: sprite.width/camera.scale, a: body.angle});
         i++;
