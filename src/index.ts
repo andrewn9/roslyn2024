@@ -159,7 +159,7 @@ const background = new PIXI.Sprite(PIXI.Texture.from("v1.png"));
 background.anchor.y = 0.69;
 app.stage.addChild(background);
 
-const player = createBox(0, 0, 10, 10, "logo.png", {density: 1, friction: 1, restitution: 0.2});
+const player = createBox(0, 0, 10, 10, "logo.png", {density: 1, frictionStatic: 2,friction: 1, restitution: 0.2});
 
 // createBox(0, 10, 100, 10, "gray.png", { isStatic: true });
 
@@ -202,15 +202,14 @@ let text = new PIXI.Text("Elevation: 0", {
     stroke: "#fff",
     strokeThickness: 5,
     lineJoin: "round",
+    zIndex: 999
 });
 text.position.x = window.innerWidth -220;
 text.position.y = 10;
 
-app.stage.addChild(text);
-
 loadedMap.forEach((map) => {
     const saved = map as any;
-    const body = createBox(saved.x, saved.y, saved.w, saved.h, "gray.png", { isStatic: true });
+    const body = createBox(saved.x, saved.y, saved.w, saved.h, "nothing.png", { isStatic: true });
     Body.setAngle(body, saved.a);
 });
 
@@ -279,10 +278,16 @@ window.addEventListener("keypress", (e) => {
 Events.on(engine, "collisionStart", (e)=>{
     e.pairs.forEach((pair) => {
         if (pair.bodyA === player || pair.bodyB === player) {
-            sounds.jump.play();
+            let name = "newclunk" + ((Math.random() * 5) + 1) + ".wav";
+            let sound = new Howl({
+                src: [name]
+            })
+            sound.play();
         }
     });
 });
 
 // const render = Render.create({canvas: app.view as HTMLCanvasElement, engine: engine});
 // Render.run(render);
+
+app.stage.addChild(text);
