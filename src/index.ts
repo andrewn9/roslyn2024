@@ -146,10 +146,12 @@ document.body.appendChild(app.view as HTMLCanvasElement);
 const engine = Engine.create();
 engine.timing.timeScale = 0.8;
 
+const background = new PIXI.Sprite(PIXI.Texture.from("1.png"));
+app.stage.addChild(background);
+
 const player = createBox(0, 0, 10, 10, "logo.png", {density: 1, friction: 1, restitution: 0.8});
 
 createBox(0, 10, 100, 10, "gray.png", { isStatic: true });
-
 
 let time: number;
 function loop(t) {
@@ -164,6 +166,9 @@ requestAnimationFrame(loop)
 
 app.ticker.add((dt) => {
     camera.y += (player.position.y - camera.y) * 0.1;
+
+    background.x = -camera.x * camera.scale;
+    background.y = -camera.y * camera.scale;
     bodies.forEach((tuple) => {
         const sprite = tuple[0];
         const body = tuple[1];
