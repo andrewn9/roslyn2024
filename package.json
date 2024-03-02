@@ -10,6 +10,8 @@
   "author": "Andrew Ng & Lance Phung",
   "license": "MIT",
   "dependencies": {
+    "@types/matter-js": "^0.19.6",
+    "matter-js": "^0.19.0",
     "vite": "^5.1.4"
   },
   "devDependencies": {
