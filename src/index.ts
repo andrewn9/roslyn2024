@@ -22,6 +22,8 @@ function createBox(x: number, y: number, w: number, h: number, source: PIXI.Text
 
     Composite.add(engine.world, body);
     bodies.push([sprite, body]);
+
+    return body;
 }
 
 window.addEventListener("pointerdown", (e) => {
@@ -40,28 +42,35 @@ window.addEventListener("pointerdown", (e) => {
     window.addEventListener("pointerup", pointerup);
 });
 
+const camera = {
+    x: 0,
+    y: 0,
+};
+
 const app = new PIXI.Application({ resizeTo: window });
 document.body.appendChild(app.view as HTMLCanvasElement);
 
 const engine = Engine.create();
 
-const player = createBox(400, 200, 10, 10, "gray.png", {}, false);
+const player = createBox(0, 0, 10, 10, "gray.png", {}, false);
 
 const map: Body[] = [];
 
 
-createBox(400, 600, 100, 10, "gray.png", { isStatic: true });
+createBox(0, 100, 100, 10, "gray.png", { isStatic: true });
 
 const runner = Runner.create();
 Runner.run(runner, engine);
 
 app.ticker.add(() => {
+    camera.y += (player.position.y - camera.y) * 0.1;
     bodies.forEach((tuple) => {
         const sprite = tuple[0];
         const body = tuple[1];
 
-        sprite.x = body.position.x;
-        sprite.y = body.position.y;
+        sprite.x = body.position.x - camera.x + app.view.width/2;
+        sprite.y = body.position.y - camera.y + app.view.height/2;
+        
         sprite.angle = body.angle * 180/Math.PI;
     });
 });
