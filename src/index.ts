@@ -1,10 +1,6 @@
 import './style.css'
-<<<<<<< HEAD
-import { Engine, World, Body, Render, Runner, Bodies, Events, Composite, Mouse, Constraint, MouseConstraint, Vector} from 'matter-js'
-=======
-import { Engine, Runner, Bodies, Composite, IChamferableBodyDefinition, Body } from 'matter-js'
+import { Engine, Runner, Bodies, Composite, IChamferableBodyDefinition, Body, Vector} from 'matter-js'
 import { Serializer } from 'matter-tools'
->>>>>>> 0a4b4c9f2cc1cd6d5aaa83e037fd283c7ce28f05
 import * as PIXI from 'pixi.js'
 import { normalizePath } from 'vite';
 
@@ -78,7 +74,8 @@ window.addEventListener("pointerdown", (e) => {
         console.log(`${force.x} ${force.y}`)
 
         Body.applyForce(player, player.position, force);
-        
+        // createBox(x, y, w, h, "gray.png", { isStatic: true });
+
 
         app.stage.removeChild(sprite);
         window.removeEventListener("pointerup", pointerup);
