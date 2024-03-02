@@ -1,7 +1,8 @@
 import './style.css'
-import { Engine, Runner, Bodies, Composite, IChamferableBodyDefinition, Body, Vector, World} from 'matter-js'
+import { Engine, Bodies, Composite, IChamferableBodyDefinition, Body, Vector, World, Events} from 'matter-js'
 import * as PIXI from 'pixi.js'
 import loadedMap from './map.json'
+import { Howl } from 'howler';
 
 const bodies: [PIXI.Sprite, Body][] = [];
 var logo: PIXI.Sprite;
@@ -9,6 +10,12 @@ var logo: PIXI.Sprite;
 let mode = 0;
 
 let selected: Body|undefined;
+
+const sounds = {
+    jump: new Howl({
+        src: ['spring.wav']
+    }),
+}
 
 function createBox(x: number, y: number, w: number, h: number, source: PIXI.TextureSource, options?: IChamferableBodyDefinition) {
     const body = Bodies.rectangle(x, y, w, h, options);
@@ -120,6 +127,8 @@ window.addEventListener("pointerdown", (e) => {
         }
         if (mode === 0 && spring_force) {
             Body.applyForce(player, player.position, spring_force);
+            const id = sounds.jump.play();
+            sounds.jump.rate(Math.random()*.5+1, id);
         } else if (mode === 1) {
             createBox(x, y, w, h, "gray.png", { isStatic: true });
         }
@@ -264,6 +273,14 @@ window.addEventListener("keypress", (e) => {
     } else {
         engine.gravity.scale = 0.001;
     }
+});
+
+Events.on(engine, "collisionStart", (e)=>{
+    e.pairs.forEach((pair) => {
+        if (pair.bodyA === player || pair.bodyB === player) {
+            sounds.jump.play();
+        }
+    });
 });
 
 // const render = Render.create({canvas: app.view as HTMLCanvasElement, engine: engine});
