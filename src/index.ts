@@ -57,17 +57,12 @@ window.addEventListener("pointerdown", (e) => {
     function pointermove(ev: PointerEvent) {
         if (e.pointerId !== ev.pointerId) return;
 
-        sprite.x = Math.min(e.clientX, ev.clientX);
-        sprite.y = Math.min(e.clientY, ev.clientY);
-        sprite.width = Math.abs(ev.clientX - e.clientX);
-        sprite.height = Math.abs(ev.clientY - e.clientY);
-
         let current = {x: ev.clientX, y: ev.clientY};
         let wpos = Vector.add(player.position, Vector.sub(current,start));
         let mag = Math.min(Vector.magnitudeSquared(Vector.sub(wpos, player.position)) / maxDrag, 1);
 
         if (logo) {
-            logo.height = (1-mag) * logo.texture.height;
+            logo.height = (1-mag) * 300;
         }
         
         if (mode === 1) {
@@ -119,7 +114,8 @@ window.addEventListener("pointerdown", (e) => {
         // createBox(x, y, w, h, "gray.png", { isStatic: true });
 
         if (logo) {
-            logo.height = logo.texture.height;
+            logo.height = 300;
+        }
         if (mode === 0) {
             Body.applyForce(player, player.position, force);
         } else if (mode === 1) {
