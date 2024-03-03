@@ -9,7 +9,8 @@ Climb through the coil of my monitor and break free using nothing but a spring.
 
 
 ### Demo
-Insert gif or link to demo
+https://github.com/andrewn9/roslyn2024/assets/79771471/ac302905-8e76-46da-9938-577bbd2099bb
+
 
 ### Deployment
 
