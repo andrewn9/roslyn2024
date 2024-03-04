@@ -1,5 +1,4 @@
-# Hooke's Hike
-
+# Hooke's Hike - a typescript platformer game using pixijs and matter
 Climb through the coil of my monitor and break free using nothing but a spring.
 
 ### Authors
@@ -10,7 +9,6 @@ Climb through the coil of my monitor and break free using nothing but a spring.
 
 ### Demo
 https://github.com/andrewn9/roslyn2024/assets/79771471/ac302905-8e76-46da-9938-577bbd2099bb
-
 
 ### Deployment
 
