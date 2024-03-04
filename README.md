@@ -14,6 +14,8 @@ https://github.com/andrewn9/roslyn2024/assets/79771471/ac302905-8e76-46da-9938-5
 
 ### Deployment
 
+(there's a bug that makes the hitboxes only align on my monitor so it like probably won't work on your device)
+
 To deploy this project run:
 
 ```bash
