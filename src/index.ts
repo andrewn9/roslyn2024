@@ -246,23 +246,30 @@ app.ticker.add((dt) => {
 
 let text = new PIXI.Text("Elevation: 0", {
     stroke: "#fff",
+    align: 'right',
     strokeThickness: 5,
     lineJoin: "round",
     fontSize: 50,
 });
 
-text.position.x = window.innerWidth * 0.8;
-text.position.y = window.innerHeight * 0.05;
+text.anchor.x = 1;
+text.anchor.y = 1;
+text.position.x = window.innerWidth * 0.95;
+text.position.y = window.innerHeight * 0.12;
 
 let timer = new PIXI.Text("Time: 0", {
     stroke: "#fff",
+    align: 'right',
     strokeThickness: 5,
     lineJoin: "round",
     fontSize: 50,
 });
 
-timer.position.x = window.innerWidth * 0.8;
-timer.position.y = window.innerHeight * 0.12;
+timer.anchor.x = 1;
+timer.anchor.y = 1;
+timer.position.x = window.innerWidth * 0.95;
+timer.position.y = window.innerHeight * 0.18;
+
 
 var startTime = 0;
 function updateTimer() {
