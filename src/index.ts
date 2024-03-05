@@ -10,10 +10,12 @@ var logo: PIXI.Sprite;
 let mode = 0;
 
 let selected: Body|undefined;
+var canjump = true;
 
 const sounds = {
     jump: new Howl({
-        src: ['spring.wav']
+        src: ['spring.wav'],
+        volume: 0.25
     }),
 }
 
@@ -39,6 +41,7 @@ function createBox(x: number, y: number, w: number, h: number, source: PIXI.Text
 
     sprite.on("click", () => {
         selected = body;
+        console.log(sprite)
         if (mode === 3) {
             const index = bodies.indexOf([sprite, body]);
             if (index > -1) { // only splice array when item is found
@@ -56,13 +59,32 @@ function createBox(x: number, y: number, w: number, h: number, source: PIXI.Text
     return body;
 }
 
+function createBox2(x: number, y: number, source: PIXI.TextureSource, options?: IChamferableBodyDefinition) {
+    const texture = PIXI.Texture.from(source);
+    
+    const sprite = new PIXI.Sprite(texture);
+    sprite.x = x;
+    sprite.y = y;
+    sprite.anchor.x = 0.5;
+    sprite.anchor.y = 0.78;
+
+    const body = Bodies.rectangle(x, y, sprite.width, sprite.height, options);
+
+    app.stage.addChild(sprite);
+    Composite.add(engine.world, body);
+    bodies.push([sprite, body]);
+
+    return body;
+}
+
+
 const maxF = 4;
-const maxDrag = 20000;
+const maxDrag = 0.4*window.innerHeight;
 var compression = 0;
 var spring_force: Vector;
 
 window.addEventListener("auxclick", (e) => {
-    if (e.button === 2) {
+    if (e.button === 1) {
         e.preventDefault();
         let x = e.clientX, y = e.clientY;
 
@@ -86,14 +108,23 @@ window.addEventListener("pointerdown", (e) => {
     function pointermove(ev: PointerEvent) {
         if (e.pointerId !== ev.pointerId) return;
 
-        let current = {x: ev.clientX, y: ev.clientY};
-        let wpos = Vector.add(player.position, Vector.sub(current,start));
-        let move = Vector.normalise(Vector.sub(wpos, player.position));
-        let mag = Math.min(Vector.magnitudeSquared(Vector.sub(wpos, player.position)) / maxDrag, 1);
-        compression = mag;
-        spring_force = Vector.mult(move, mag * maxF);
-        spring_force.x *= -0.5;
-        spring_force.y *= -1;
+        if (canjump)
+        {
+            let current = {x: ev.clientX, y: ev.clientY};
+            let wpos = Vector.add(player.position, Vector.sub(current,start));
+            console.log(wpos);
+            let move = Vector.normalise(Vector.sub(wpos, player.position));
+            let mag = Math.min(Vector.magnitudeSquared(Vector.sub(wpos, player.position)) / maxDrag, 1);
+            compression = mag;
+            spring_force = Vector.mult(move, mag * maxF);
+            spring_force.x *= -0.5;
+            spring_force.y *= -1;
+            
+            if (logo) {
+                logo.height = 50/(mag+1);
+                // logo.anchor.y = 1;
+            }
+        }
 
         if (mode === 1) {
             sprite.x = Math.min(e.clientX, ev.clientX);
@@ -103,11 +134,6 @@ window.addEventListener("pointerdown", (e) => {
         } else if (mode === 2 && selected) {
             Body.setAngle(selected, Math.atan2(ev.clientY - (selected.position.y - camera.y) * camera.scale - app.view.height/2, ev.clientX - (selected.position.x - camera.x) * camera.scale - app.view.width/2));
             // selected.angle = ;
-        }
-
-        if (logo) {
-            logo.height = 50/(mag+1);
-            // logo.anchor.y = 1;
         }
 
     }
@@ -131,10 +157,11 @@ window.addEventListener("pointerdown", (e) => {
         if (logo) {
             logo.height = 50;
         }
-        if (mode === 0 && spring_force) {
+        if (mode === 0 && spring_force && Vector.magnitudeSquared(spring_force) > 0 && canjump) {
             Body.applyForce(player, player.position, spring_force);
             const id = sounds.jump.play();
-            sounds.jump.rate(Math.random()*.5+1, id);
+            sounds.jump.rate(Math.random()*0.5+1, id);
+            canjump = false;
         } else if (mode === 1) {
             createBox(x, y, w, h, "gray.png", { isStatic: true });
         }
@@ -161,11 +188,15 @@ document.body.appendChild(app.view as HTMLCanvasElement);
 const engine = Engine.create();
 engine.timing.timeScale = 0.8;
 
-const background = new PIXI.Sprite(PIXI.Texture.from("v1.png"));
-background.anchor.y = 0.69;
-app.stage.addChild(background);
+const bg_object = createBox2(0,0, "v1.png", { isStatic: true, 
+    collisionFilter: {
+        'group': -1,
+        'category': 2,
+        'mask': 0,
+    }
+});
 
-const player = createBox(0, 0, 10, 10, "logo.png", {density: 1, frictionStatic: 2,friction: 1, restitution: 0.2});
+const player = createBox(-120, 120, 10, 10, "logo.png", {density: 1, frictionStatic: 2,friction: 1, restitution: 0.2});
 
 // createBox(0, 10, 100, 10, "gray.png", { isStatic: true });
 
@@ -180,11 +211,11 @@ function loop(t) {
 
 requestAnimationFrame(loop)
 
+var won = false;
 app.ticker.add((dt) => {
+    
     camera.y += (player.position.y - camera.y) * 0.1;
 
-    background.x = -camera.x * camera.scale;
-    background.y = -camera.y * camera.scale;
     bodies.forEach((tuple) => {
         const sprite = tuple[0];
         const body = tuple[1];
@@ -202,16 +233,44 @@ app.ticker.add((dt) => {
     });
 
     text.text = `Elevation: ${Math.round(-player.position.y)}`;
+    
+    console.log(won);
+    if (-player.position.y > 670 ) {
+        won = true;
+    }
+    if (!won) {
+        updateTimer();
+    }
 });
 
 let text = new PIXI.Text("Elevation: 0", {
     stroke: "#fff",
     strokeThickness: 5,
     lineJoin: "round",
-    zIndex: 999
+    fontSize: 50,
 });
-text.position.x = window.innerWidth -220;
-text.position.y = 10;
+
+text.position.x = window.innerWidth * 0.8;
+text.position.y = window.innerHeight * 0.05;
+
+let timer = new PIXI.Text("Time: 0", {
+    stroke: "#fff",
+    strokeThickness: 5,
+    lineJoin: "round",
+    fontSize: 50,
+});
+
+timer.position.x = window.innerWidth * 0.8;
+timer.position.y = window.innerHeight * 0.12;
+
+var startTime = new Date().getTime();
+function updateTimer() {
+    const currentTime = new Date().getTime() - startTime;
+    const minutes = Math.floor(currentTime / (60 * 1000)).toString().padStart(2, '0');
+    const seconds = Math.floor((currentTime % (60 * 1000)) / 1000).toString().padStart(2, '0');
+    const milliseconds = (currentTime % 1000).toString().padStart(3, '0');
+    timer.text = `Time: ${minutes}:${seconds}:${milliseconds}`;
+}
 
 loadedMap.forEach((map) => {
     const saved = map as any;
@@ -290,11 +349,14 @@ window.addEventListener("keypress", (e) => {
 Events.on(engine, "collisionStart", (e)=>{
     e.pairs.forEach((pair) => {
         if (pair.bodyA === player || pair.bodyB === player) {
-            let name = "newclunk" + ((Math.random() * 5) + 1) + ".wav";
+            let name = "newclunk" + (Math.floor(Math.random() * 5) + 1) + ".wav";
+
+            console.log(name);
             let sound = new Howl({
                 src: [name]
             })
             sound.play();
+            canjump = true;
         }
     });
 });
@@ -303,3 +365,4 @@ Events.on(engine, "collisionStart", (e)=>{
 // Render.run(render);
 
 app.stage.addChild(text);
+app.stage.addChild(timer);
