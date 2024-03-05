@@ -76,11 +76,6 @@ function createBox2(x: number, y: number, source: PIXI.TextureSource, options?: 
     return body;
 }
 
-
-const maxF = 15;
-var compression = 0;
-var spring_force: Vector;
-
 window.addEventListener("auxclick", (e) => {
     if (e.button === 1) {
         e.preventDefault();
@@ -97,36 +92,32 @@ window.addEventListener("auxclick", (e) => {
     }
 });
 
-let scale = 0.5;
 window.addEventListener("pointerdown", (e) => {
-    let start = {x: e.clientX / window.innerWidth * scale, y: e.clientY / window.innerHeight * scale};
+    let start = {x: e.clientX, y: e.clientY};
     const sprite = new PIXI.Sprite(PIXI.Texture.from("gray.png"));
     app.stage.addChild(sprite);
     sprite.height = 0;
+
+    const indicator = new PIXI.Sprite(PIXI.Texture.from("logo.png"));
+    indicator.position.x = e.clientX;
+    indicator.position.y = e.clientY;
+    indicator.width = 10;
+    indicator.height = 10;
+    indicator.anchor.set(0.5, 0.5);
+    app.stage.addChild(indicator);
     
     function pointermove(ev: PointerEvent) {
         if (e.pointerId !== ev.pointerId) return;
 
-        if (canjump)
-        {
-            let current = {x: ev.clientX / window.innerWidth * scale, y: ev.clientY / window.innerHeight * scale};
-            console.log(start);
-            console.log(current);
-            let diff = Vector.sub(current, start);
-            diff.x = Math.min(Math.abs(diff.x), 0.25) * Math.sign(diff.x);
-            diff.y = Math.min(Math.abs(diff.y), 0.25) * Math.sign(diff.y);
-
-            spring_force = Vector.mult(diff, maxF);
-            spring_force.x *= -0.5;
-            spring_force.y *= -1;
+        if (mode === 0) {
+            const diff = Vector.sub({x: ev.clientX, y: ev.clientY}, start);
+            diff.x /= window.innerWidth;
+            diff.y /= window.innerHeight;
             
             if (logo) {
                 logo.height = 50/(Vector.magnitudeSquared(diff)+1);
-                // logo.anchor.y = 1;
             }
-        }
-
-        if (mode === 1) {
+        } else if (mode === 1) {
             sprite.x = Math.min(e.clientX, ev.clientX);
             sprite.y = Math.min(e.clientY, ev.clientY);
             sprite.width = Math.abs(ev.clientX - e.clientX);
@@ -157,8 +148,13 @@ window.addEventListener("pointerdown", (e) => {
         if (logo) {
             logo.height = 50;
         }
-        if (mode === 0 && spring_force && Vector.magnitudeSquared(spring_force) > 0 && canjump) {
-            Body.applyForce(player, player.position, spring_force);
+        if (mode === 0) {
+            const diff = Vector.sub({x: ev.clientX, y: ev.clientY}, start);
+            console.log(diff);
+            diff.x = -Math.min(Math.abs(diff.x/window.innerHeight), 0.5) * Math.sign(diff.x) * 6;
+            diff.y = -Math.min(Math.abs(diff.y/window.innerWidth), 0.5) * Math.sign(diff.y) * 20;
+            console.log(diff);
+            Body.setVelocity(player, Vector.add(player.velocity, diff));
             const id = sounds.jump.play();
             sounds.jump.rate(Math.random()*0.5+1, id);
             canjump = false;
@@ -171,6 +167,7 @@ window.addEventListener("pointerdown", (e) => {
         }
 
         app.stage.removeChild(sprite);
+        app.stage.removeChild(indicator);
         window.removeEventListener("pointerup", pointerup);
         window.removeEventListener("pointermove", pointermove);
     }
@@ -205,12 +202,13 @@ const player = createBox(-120, 120, 10, 10, "logo.png", {density: 1, frictionSta
 // createBox(0, 10, 100, 10, "gray.png", { isStatic: true });
 
 let time: number;
+let dt = 16;
 function loop(t) {
-    const dt = Math.min(t-time, 100);
+    dt = Math.min(t-time, 100) || 16;
     time = t;
     // console.log(dt);
     requestAnimationFrame(loop)
-    Engine.update(engine, dt || 16);
+    Engine.update(engine, dt);
 }
 
 requestAnimationFrame(loop)
@@ -279,7 +277,7 @@ var started = false;
 
 loadedMap.forEach((map) => {
     const saved = map as any;
-    const body = createBox(saved.x, saved.y, saved.w, saved.h, "nothing.png", { isStatic: true });
+    const body = createBox(saved.x, saved.y, saved.w, saved.h, "gray.png", { isStatic: true });
     Body.setAngle(body, saved.a);
 });
 
@@ -290,8 +288,7 @@ loadedMap.forEach((map) => {
         const sprite = tuple[0];
         const body = tuple[1];
 
-        if (body === player) return;
-        console.log(app.stage.children.findIndex((value) => {return value==sprite}) === -1);
+        if (body === player || body === bg_object || sprite.height === 0 || sprite.width === 0) return;
         if (app.stage.children.findIndex((value) => {return value==sprite}) === -1) return; 
 
         map.push({x: body.position.x, y: body.position.y, h: sprite.height/camera.scale, w: sprite.width/camera.scale, a: body.angle});
@@ -316,8 +313,22 @@ loadedMap.forEach((map) => {
     }
 });
 
+window.addEventListener("keydown", (e) => {
+    if (mode === 2 && selected) {
+        const key = e.key.toLowerCase();
+        if (key === "arrowleft") {
+            selected.position.x -= 1;
+        } else if (key === "arrowright") {
+            selected.position.x += 1;
+        } else if (key === "arrowup") {
+            selected.position.y -= 1;
+        } else if (key === "arrowdown") {
+            selected.position.y += 1;
+        }
+    }
+});
+
 window.addEventListener("keypress", (e) => {
-    if (e.repeat) return;
 
     if (e.key === "1") {
         mode = 0;
@@ -327,8 +338,6 @@ window.addEventListener("keypress", (e) => {
         mode = 2;
     }  else if (e.key === "4") {
         mode = 3;
-    } else if (e.key === "g") {
-        console.log(bodies.length);
     }
 
     const button = document.querySelector("#mode") as HTMLButtonElement;
