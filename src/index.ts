@@ -110,8 +110,6 @@ window.addEventListener("pointerdown", (e) => {
         if (canjump)
         {
             let current = {x: ev.clientX / window.innerWidth * scale, y: ev.clientY / window.innerHeight * scale};
-            console.log(start);
-            console.log(current);
             let diff = Vector.sub(current, start);
             diff.x = Math.min(Math.abs(diff.x), 0.25) * Math.sign(diff.x);
             diff.y = Math.min(Math.abs(diff.y), 0.25) * Math.sign(diff.y);
@@ -159,6 +157,7 @@ window.addEventListener("pointerdown", (e) => {
         }
         if (mode === 0 && spring_force && Vector.magnitudeSquared(spring_force) > 0 && canjump) {
             Body.applyForce(player, player.position, spring_force);
+            console.log(spring_force);
             const id = sounds.jump.play();
             sounds.jump.rate(Math.random()*0.5+1, id);
             canjump = false;
@@ -248,23 +247,30 @@ app.ticker.add((dt) => {
 
 let text = new PIXI.Text("Elevation: 0", {
     stroke: "#fff",
+    align: 'right',
     strokeThickness: 5,
     lineJoin: "round",
     fontSize: 50,
 });
 
-text.position.x = window.innerWidth * 0.8;
-text.position.y = window.innerHeight * 0.05;
+text.anchor.x = 1;
+text.anchor.y = 1;
+text.position.x = window.innerWidth * 0.95;
+text.position.y = window.innerHeight * 0.12;
 
 let timer = new PIXI.Text("Time: 0", {
     stroke: "#fff",
+    align: 'right',
     strokeThickness: 5,
     lineJoin: "round",
     fontSize: 50,
 });
 
-timer.position.x = window.innerWidth * 0.8;
-timer.position.y = window.innerHeight * 0.12;
+timer.anchor.x = 1;
+timer.anchor.y = 1;
+timer.position.x = window.innerWidth * 0.95;
+timer.position.y = window.innerHeight * 0.18;
+
 
 var startTime = 0;
 function updateTimer() {
