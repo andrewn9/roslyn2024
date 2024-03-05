@@ -162,7 +162,10 @@ window.addEventListener("pointerdown", (e) => {
             const id = sounds.jump.play();
             sounds.jump.rate(Math.random()*0.5+1, id);
             canjump = false;
-            started = true;
+            if (!started) {
+                started = true;
+                startTime = new Date().getTime();
+            }
         } else if (mode === 1) {
             createBox(x, y, w, h, "gray.png", { isStatic: true });
         }
@@ -264,7 +267,7 @@ let timer = new PIXI.Text("Time: 0", {
 timer.position.x = window.innerWidth * 0.8;
 timer.position.y = window.innerHeight * 0.12;
 
-var startTime = new Date().getTime();
+var startTime = 0;
 function updateTimer() {
     const currentTime = new Date().getTime() - startTime;
     const minutes = Math.floor(currentTime / (60 * 1000)).toString().padStart(2, '0');
