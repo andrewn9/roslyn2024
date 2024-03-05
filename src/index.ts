@@ -162,6 +162,7 @@ window.addEventListener("pointerdown", (e) => {
             const id = sounds.jump.play();
             sounds.jump.rate(Math.random()*0.5+1, id);
             canjump = false;
+            started = true;
         } else if (mode === 1) {
             createBox(x, y, w, h, "gray.png", { isStatic: true });
         }
@@ -238,7 +239,7 @@ app.ticker.add((dt) => {
     if (-player.position.y > 670 ) {
         won = true;
     }
-    if (!won) {
+    if (!won && started) {
         updateTimer();
     }
 });
@@ -271,6 +272,8 @@ function updateTimer() {
     const milliseconds = (currentTime % 1000).toString().padStart(3, '0');
     timer.text = `Time: ${minutes}:${seconds}:${milliseconds}`;
 }
+
+var started = false;
 
 loadedMap.forEach((map) => {
     const saved = map as any;
