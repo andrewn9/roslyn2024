@@ -62,6 +62,7 @@ function createBox2(x: number, y: number, source: PIXI.TextureSource, options?: 
     const texture = PIXI.Texture.from(source);
     
     const sprite = new PIXI.Sprite(texture);
+    sprite.scale.set(camera.scale/5);
     sprite.x = x;
     sprite.y = y;
     sprite.anchor.x = 0.5;
@@ -179,7 +180,7 @@ window.addEventListener("pointerdown", (e) => {
 const camera = {
     x: 0,
     y: 0,
-    scale: 5,
+    scale: 4*window.innerWidth/1536,
 };
 
 
