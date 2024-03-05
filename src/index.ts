@@ -284,7 +284,7 @@ var started = false;
 
 loadedMap.forEach((map) => {
     const saved = map as any;
-    const body = createBox(saved.x, saved.y, saved.w, saved.h, "gray.png", { isStatic: true });
+    const body = createBox(saved.x, saved.y, saved.w, saved.h, "nothing.png", { isStatic: true });
     Body.setAngle(body, saved.a);
 });
 
