@@ -95,7 +95,7 @@ window.addEventListener("auxclick", (e) => {
 
 window.addEventListener("pointerdown", (e) => {
     let start = {x: e.clientX, y: e.clientY};
-    const sprite = new PIXI.Sprite(PIXI.Texture.from("gray.png"));
+    const sprite = new PIXI.Sprite(PIXI.Texture.from("red.png"));
     app.stage.addChild(sprite);
     sprite.height = 0;
 
@@ -164,7 +164,7 @@ window.addEventListener("pointerdown", (e) => {
                 startTime = new Date().getTime();
             }
         } else if (mode === 1) {
-            createBox(x, y, w, h, "gray.png", { isStatic: true });
+            createBox(x, y, w, h, "red.png", { isStatic: true });
         }
 
         app.stage.removeChild(sprite);
@@ -215,6 +215,7 @@ function loop(t) {
 requestAnimationFrame(loop)
 
 var won = false;
+var visualize = false;
 app.ticker.add((dt) => {
     
     camera.y += (player.position.y - camera.y) * 0.1;
@@ -233,6 +234,8 @@ app.ticker.add((dt) => {
         sprite.y = (body.position.y - camera.y) * camera.scale + app.view.height/2;
         
         sprite.angle = body.angle * 180/Math.PI;
+
+        
     });
 
     text.text = `Elevation: ${Math.round(-player.position.y)}`;
@@ -319,6 +322,20 @@ loadedMap.forEach((map) => {
     } else if (mode === 3) {
         button.innerText = "Delete";
     }
+});
+
+(document.querySelector("#hitboxtoggle") as HTMLButtonElement).addEventListener("click", (e)=>{
+    visualize = !visualize;
+    bodies.forEach((tuple) => {
+        const sprite = tuple[0];
+        const body = tuple[1];
+
+        if (visualize && sprite.texture === PIXI.Texture.from("nothing.png")) {
+            sprite.texture = PIXI.Texture.from("red.png");
+        } else if (sprite.texture === PIXI.Texture.from("red.png")) {
+            sprite.texture = PIXI.Texture.from("nothing.png")
+        }
+    });
 });
 
 window.addEventListener("keydown", (e) => {
